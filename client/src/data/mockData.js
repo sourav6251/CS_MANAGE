@@ -182,3 +182,8 @@ export const certificateTypes = [
 export const getDaysOfWeek = () => {
   return ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
 };
+
+export const department=[
+  "Math",
+  "Physic"
+]

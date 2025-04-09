@@ -32,8 +32,8 @@ const Header = () => {
   };
 
   return (
-    <header className="bg-blue-700 text-white shadow-md">
-      <div className="max-w-7xl mx-auto px-4 py-3 flex justify-between items-center">
+    <header className="bg-blue-700 text-white shadow-md h-[3rem]">
+      <div className="max-w-7xl mx-auto px-4  flex justify-between items-center">
         {/* Left Section */}
         <div className="flex items-center space-x-2">
           <span className="text-2xl">🏫</span>

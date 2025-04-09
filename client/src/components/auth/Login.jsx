@@ -29,15 +29,17 @@ export const Login = () => {
 
     const formSubmit = (e) => {
         e.preventDefault();
-        // Add real auth logic here (mock for now)
         console.log(loginForm);
 
         dispatch(setLogin(true));
-        dispatch(setRole("faculty")); // Replace with dynamic role if needed
+        dispatch(setRole("faculty")); 
 
         toast.success("Logged in successfully 🚀");
         navigate("/");
     };
+    const register=(e)=>{
+        navigate("/register")
+    }
 
     return (
         <>
@@ -47,7 +49,7 @@ export const Login = () => {
                 <motion.div
                     initial={{ opacity: 0, y: 50 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 2, ease: "easeOut" }}
+                    transition={{ duration: 0.5, ease: "easeOut" }}
                     className="w-full max-w-md bg-white p-6 rounded-2xl shadow-xl"
                 >
                     <div className="text-center mb-6">
@@ -114,7 +116,7 @@ export const Login = () => {
 
                         <p className="text-center text-sm text-gray-600 mt-2">
                             Don't have any account?{" "}
-                            <span className="text-blue-500 hover:underline font-medium">
+                            <span className="text-blue-500 hover:underline font-medium  cursor-pointer" onClick={register}>
                                 Register here
                             </span>
                         </p>

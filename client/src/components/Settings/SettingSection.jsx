@@ -24,12 +24,12 @@ const SettingSection = () => {
   };
 
   return (
-    <div className="flex gap-6">
+    <div className="flex gap-1  justify-around">
       
-      <div className="flex-1">
+      <div className="flex-1 pl-16">
         {renderComponent()}
       </div>
-      <SettingSlied setActiveSetting={setActiveSetting} />
+      <SettingSlied  setActiveSetting={setActiveSetting} />
     </div>
   );
 };
