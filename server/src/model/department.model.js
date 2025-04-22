@@ -27,16 +27,12 @@ const departmentSchema = new Schema({
         // required : true,
 
     },
-    // email : {
-    //     type : String,
-    //     required : [ true, 'email is requiresd !' ],
-    //     unique : true,
-    //     match : [
-    //         /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/,
-    //         'Please provide a valid email address'
-    //     ], 
-    //     trim : true
-    // },
+    email : {
+        type : String,
+        required : [ true, 'email is requiresd !' ],
+        unique : true,
+        trim : true
+    },
     
 
 } , { timestamps : true} )
