@@ -141,7 +141,7 @@ class ApiFunction {
         });
         console.log("response",response.data.data);
         
-        return response;
+        return response.data.data;
         // toast.success("")
         } catch (error) {
             toast.error("Something wrong pleas try again")

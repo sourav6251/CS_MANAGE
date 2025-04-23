@@ -44,9 +44,11 @@ const NoticeBoard = () => {
         const fetchNotices = async () => {
             try {
                 const response = await ApiFunction.showNotice();
-                if (response && response.data) {
-                    setNotices(response.data); // Assuming the API response has a `data` field with the notices
+                if (response) {
+                    setNotices(response); // Assuming the API response has a `data` field with the notices
                 }
+                console.log("Notice",notices);
+                
             } catch (error) {
                 console.error("Error fetching notices:", error);
             }
@@ -163,10 +165,21 @@ const NoticeBoard = () => {
                     initial="hidden"
                     animate="show"
                 >
-                    {notices.length > 0 ? (
+                    {Array.isArray(notices) && notices.length > 0 ? (
+  notices.map((notice, index) => (
+    <motion.div variants={itemVariants} key={index}>
+      <NoticeContent {...notice} />
+    </motion.div>
+  ))
+) : (
+  <motion.div variants={itemVariants}>
+    <div>No notices availabledfgf</div>
+  </motion.div>
+)}
+
+                    {/* {notices.length > 0 ? (
                         notices.map((notice, index) => (
                             <motion.div variants={itemVariants} key={index}>
-                                {/* <NoticeContent notice={notice} /> */}
                                 <NoticeContent {...notice} />
 
                             </motion.div>
@@ -175,7 +188,7 @@ const NoticeBoard = () => {
                         <motion.div variants={itemVariants}>
                             <div>No notices availablefghdfhg</div>
                         </motion.div>
-                    )}
+                    )} */}
                 </motion.div>
             </div>
         </>
