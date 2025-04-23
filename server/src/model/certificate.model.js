@@ -1,15 +1,5 @@
 import { model, Schema } from "mongoose";
-/**
- * @var user
- * @var department
- * @var semester
- * @var papercode
- * @var papername
- * @var studensNo
- * @var dateOfExamination
- * @var designation
- * @var status
- */
+
 
 const certificateSchema = new Schema({
     hod: {
@@ -29,8 +19,8 @@ const certificateSchema = new Schema({
         required: true,
     },
     semester: {
-        type: Schema.Types.ObjectId,
-        ref: "semester",
+        type: Number,
+        enum: [1,2,3,4,5,6,7,8],
         required: true,
     },
     paperCode: {

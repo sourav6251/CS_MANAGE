@@ -33,9 +33,9 @@ const routineSchema = new Schema({
         required : true ,
     },
     semester : {
-        type : Schema.Types.ObjectId,
-        ref : 'semester',
-        required : true ,
+        type: Number,
+        enum: [1,2,3,4,5,6,7,8],
+        required: true,
     },
     roomNo:{
         type :String
