@@ -132,20 +132,43 @@ class ApiFunction {
 
     async showNotice() {
         try {
-            
-        const response = await axios.get(`${this.backendUrl}noticeboard/`, {
-            params: {
-                user: userid, // Replace with actual user ID
-                department: departmentid, // Replace with actual department ID
-            },
-        });
-        console.log("response",response.data.data);
-        
-        return response.data.data;
-        // toast.success("")
+            const response = await axios.get(`${this.backendUrl}noticeboard/`, {
+                params: {
+                    user: userid, // Replace with actual user ID
+                    department: departmentid, // Replace with actual department ID
+                },
+            });
+            console.log("response", response.data.data);
+
+            return response.data.data;
+            // toast.success("")
         } catch (error) {
-            toast.error("Something wrong pleas try again")
+            toast.error("Something wrong pleas try again");
         }
+    }
+
+    async uploadSyllabus(data) {
+        let coudinaryResponse = await this.uploadCoudinary(data.syllabusFile);
+        
+        const mediaInfo = {
+            url: coudinaryResponse.secure_url,
+            id: coudinaryResponse.public_id,
+        };
+        let symmaus = {
+            user: userid,
+            department: departmentid,
+            semester: data.semester,
+            paperCode: data.paperCode,
+            paperName:data.paperName,
+            media: [
+                {
+                    mediaUrl: mediaInfo.url,
+                    mediaID: mediaInfo.id,
+                },
+            ],
+        };
+        // http://127.0.0.1:8080/api/v1/syllabus
+
     }
 }
 
