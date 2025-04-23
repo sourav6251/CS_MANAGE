@@ -3,7 +3,7 @@ import Cirtificates from "./Cirtificates";
 import Meetings from "./Meetings";
 import Members from "./Members";
 import NotFound from "./NotFound";
-import NoticeBoard from "./NoticeBoard";
+// import NoticeBoard from "./NoticeBoard";
 import Routines from "./Routines";
 import Settings from "./Settings";
 import Syllabus from "./Syllabus";
@@ -15,7 +15,7 @@ export {
     Meetings,
     Members,
     NotFound,
-    NoticeBoard,
+    // NoticeBoard,
     Routines,
     Settings,
     Syllabus,

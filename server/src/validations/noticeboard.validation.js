@@ -24,7 +24,7 @@ class NoticeboardValidation {
             media: z
                 .object({
                     url: z.string({ required_error: "Media URL is required" }).url("Invalid URL"),
-                    public_id: z.string({ required_error: "Media public ID is required" }),
+                    id: z.string({ required_error: "Media public ID is required" }),
                 })
         }),
     });

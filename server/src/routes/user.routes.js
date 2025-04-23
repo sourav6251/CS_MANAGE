@@ -9,8 +9,8 @@ const router = express.Router();
 
 router
     .post("/create", validate(userValidation.create), userController.createUser)
-    .get("/", userController.showAllUser);
-    // .post("/create", validate(userSchemas.createUser),  createUser)
+    .get("/", userController.showAllUser)
+    .post("/login",validate(userValidation.login),  userController.loginUser)
     // .post("/login", validate(userSchemas.login),  logInUser)
     // .post("/send-otp", validate(userSchemas.sendOtp),  sendOtpForVerifyAccount)
     // .post("/verify-otp", validate(userSchemas.verifyOtp),  VerifyOtpWithExpiry)

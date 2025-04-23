@@ -1,5 +1,5 @@
-import { Provider } from "react-redux";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Provider, useSelector } from "react-redux";
+import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 
 import { store } from "@/redux/store";
 import { Toaster } from "@/components/ui/toaster";
@@ -16,14 +16,53 @@ import {
     Meetings,
     Members,
     NotFound,
-    NoticeBoard,
     Routines,
     Settings,
     Syllabus,
 } from "./pages";
+import NoticeBoard from "./pages/NoticeBoard";
 
 // Create a client
 const queryClient = new QueryClient();
+
+
+const PrivateRoute = ({ children }) => {
+    const isLogin = useSelector((state) => state.user.isLogin);
+    return isLogin ? children : <Navigate to="/login" replace />;
+};
+
+const AppRoutes = () => {
+    const isLogin = useSelector((state) => state.user.isLogin);
+
+    return (
+        <Routes>
+            <Route
+                path="/"
+                element={
+                    <PrivateRoute>
+                        <Layout />
+                    </PrivateRoute>
+                }
+            >
+                <Route index element={<Dashboard />} />
+                <Route path="/routines" element={<Routines />} />
+                <Route path="/cirtificates" element={<Cirtificates />} />
+                <Route path="/meetings" element={<Meetings />} />
+                <Route path="/members" element={<Members />} />
+                <Route path="/notice-board" element={<NoticeBoard />} />
+                <Route path="/settings" element={<Settings />} />
+                <Route path="/syllabus" element={<Syllabus />} />
+            </Route>
+            <Route
+                path="/login"
+                element={
+                    isLogin ? <Navigate to="/" replace /> : <Login />
+                }
+            />
+            <Route path="*" element={<NotFound />} />
+        </Routes>
+    );
+};
 
 const App = () => (
     <Provider store={store}>
@@ -33,39 +72,7 @@ const App = () => (
                     <Toaster />
                     <Sonner />
                     <BrowserRouter>
-                        <Routes>
-                            <Route path="/" element={<Layout />}>
-                                <Route index element={<Dashboard />} />
-                                <Route
-                                    path="/routines"
-                                    element={<Routines />}
-                                />
-                                <Route
-                                    path="/cirtificates"
-                                    element={<Cirtificates />}
-                                />
-                                <Route
-                                    path="/meetings"
-                                    element={<Meetings />}
-                                />
-                                <Route path="/members" element={<Members />} />
-                                <Route
-                                    path="/notice-board"
-                                    element={<NoticeBoard />}
-                                />
-                                <Route
-                                    path="/settings"
-                                    element={<Settings />}
-                                />
-                                <Route
-                                    path="/syllabus"
-                                    element={<Syllabus />}
-                                />
-                            </Route>
-                            <Route path="/login" element={<Login />} />
-                            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-                            <Route path="*" element={<NotFound />} />
-                        </Routes>
+                        <AppRoutes />
                     </BrowserRouter>
                 </TooltipProvider>
             </QueryClientProvider>

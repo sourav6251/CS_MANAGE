@@ -1,6 +1,6 @@
 import { RESPONSE_MESSAGES } from "../constants/responseMessage.constants.js";
 import { HTTP_STATUS } from "../constants/statusCode.constants.js";
-import noticeboardService from "../services/noticeboard.service.js";
+import noticeboardService from "../services/notice.service.js";
 import { sendResponse } from "../utils/response.handler.js";
 
 class NoticeboardController {

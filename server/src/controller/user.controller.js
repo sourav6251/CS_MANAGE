@@ -17,7 +17,7 @@ class UserController {
                 role: req.body.role,
             };
 
-            const user = await userService.createUser(
+            const user = await userService.RegisterUser(
                 userData,
                 req.body.role,
                 req.body.departmentID,
@@ -39,15 +39,16 @@ class UserController {
         }
     }
 
-    async showAllUser(req,res){try{
-        const user= await userService.showuser();
-        return sendResponse(res, {
-            status: HTTP_STATUS.CREATED,
-            message: RESPONSE_MESSAGES.USER_CREATED,
-            success: true,
-            data: user,
-        });}catch(error){
-
+    async showAllUser(req, res) {
+        try {
+            const user = await userService.showuser();
+            return sendResponse(res, {
+                status: HTTP_STATUS.CREATED,
+                message: RESPONSE_MESSAGES.USER_CREATED,
+                success: true,
+                data: user,
+            });
+        } catch (error) {
             return sendResponse(res, {
                 status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
                 message: RESPONSE_MESSAGES.INTERNAL_ERROR,
@@ -56,6 +57,35 @@ class UserController {
             });
         }
     }
+
+    async loginUser(req, res) {
+        try {
+            const user = await userService.login(req.body);
+    
+            if (user === "notExist") {
+                return sendResponse(res, {
+                    status: 404,
+                    message: "User doesn't exist",
+                    success: false,
+                    error: "Invalid email or password",
+                });
+            }
+            return sendResponse(res, {
+                status: HTTP_STATUS.OK,
+                message: RESPONSE_MESSAGES.USER_LOGGED_IN || "User logged in successfully",
+                success: true,
+                data: user,
+            });
+        } catch (error) {
+            return sendResponse(res, {
+                status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                message: RESPONSE_MESSAGES.INTERNAL_ERROR,
+                success: false,
+                error: error.message || "Something went wrong",
+            });
+        }
+    }
+    
 }
 
 export default new UserController();
