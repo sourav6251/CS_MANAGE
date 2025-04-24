@@ -1,69 +1,42 @@
 import { useEffect, useState } from 'react';
 import { useSelector } from 'react-redux';
-import { Calendar, Clock, MapPin, Users, Video, ChevronRight, AlertCircle } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, Video, AlertCircle, Mail } from 'lucide-react';
+import { toast } from 'sonner';
+import ApiFunction from '../services/ApiFunction';
+import store from '../../redux/Store';
 
 const MeetingList = () => {
-  const role = useSelector((state) => state.user.role);
+  const { role, userid } = store.getState().user;
   const isHod = role === 'hod';
-  const facultyId = 1; // Assuming this would come from auth state
 
   const [meetings, setMeetings] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Dummy API fetch
-
   useEffect(() => {
     const fetchMeetings = async () => {
       setLoading(true);
       try {
-        // Simulating an API call with setTimeout
-        const res = await new Promise((resolve) =>
-          setTimeout(() => {
-            resolve([
-              {
-                id: 1,
-                title: 'Department Strategy Meeting',
-                description: 'Quarterly planning session to align department goals and initiatives.',
-                date: '2025-04-10',
-                startTime: '10:00',
-                endTime: '11:30',
-                participants: 12,
-                isVirtual: false,
-                location: 'Main Conference Room (Building A)',
-                attendees: [1, 2, 3],
-              },
-              {
-                id: 2,
-                title: 'Research Project Review',
-                description: 'Review progress on current research projects and discuss next steps.',
-                date: '2025-04-12',
-                startTime: '14:00',
-                endTime: '15:30',
-                participants: 8,
-                isVirtual: true,
-                location: 'https://zoom.us/j/123456789',
-                attendees: [3, 4, 5],
-              },
-              {
-                id: 3,
-                title: 'Curriculum Development Workshop',
-                description: 'Workshop to develop new curriculum for upcoming academic year.',
-                date: '2025-04-15',
-                startTime: '09:00',
-                endTime: '12:00',
-                participants: 15,
-                isVirtual: false,
-                location: 'Faculty Lounge (Building B)',
-                attendees: [1, 2, 4, 5],
-              },
-            ]);
-          }, 1000)
-        );
-        setMeetings(res);
+        const res = await ApiFunction.getMeetings();
+        const mappedMeetings = res.map((meeting) => ({
+          id: meeting._id,
+          title: meeting.title,
+          description: meeting.description,
+          date: new Date(meeting.mettingTime).toISOString().split('T')[0],
+          startTime: new Date(meeting.mettingTime).toTimeString().slice(0, 5),
+          endTime: new Date(meeting.endTime || new Date(new Date(meeting.mettingTime).getTime() + 60 * 60 * 1000)).toTimeString().slice(0, 5),
+          participants: meeting.participants.length,
+          isVirtual: meeting.mettingArea.includes('http'),
+          location: meeting.mettingArea,
+          attendees: meeting.participants
+            .filter((p) => p.user)
+            .map((p) => p.user._id),
+        }));
+        setMeetings(mappedMeetings);
       } catch (err) {
         console.error('Failed to fetch meetings', err);
         setError('Failed to load meetings. Please try again later.');
+        toast.error('Failed to load meetings');
       } finally {
         setLoading(false);
       }
@@ -71,6 +44,16 @@ const MeetingList = () => {
 
     fetchMeetings();
   }, []);
+
+  const handleNotify = async (meetingId) => {
+    try {
+      await ApiFunction.notifyParticipants(meetingId);
+      toast.success('Notifications sent to participants');
+    } catch (error) {
+      toast.error('Failed to send notifications');
+      console.error('Notify error:', error);
+    }
+  };
 
   const formatDate = (dateString) => {
     const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -83,7 +66,7 @@ const MeetingList = () => {
 
   const filteredMeetings = isHod
     ? meetings
-    : meetings.filter((meeting) => meeting.attendees.includes(facultyId));
+    : meetings.filter((meeting) => meeting.attendees.includes(userid));
 
   const isMeetingPast = (meetingDate) => {
     return new Date(meetingDate) < new Date();
@@ -106,7 +89,7 @@ const MeetingList = () => {
           <AlertCircle className="w-12 h-12 text-red-500 mb-4" />
           <h3 className="text-lg font-medium text-gray-900 mb-2">Error Loading Meetings</h3>
           <p className="text-gray-600 max-w-md">{error}</p>
-          <button 
+          <button
             onClick={() => window.location.reload()}
             className="mt-4 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
           >
@@ -135,28 +118,33 @@ const MeetingList = () => {
           filteredMeetings.map((meeting) => (
             <div
               key={meeting.id}
-              className={`p-6 hover:bg-gray-50 transition-colors rounded-lg shadow-blue-50  my-3 ${isMeetingPast(meeting.date) ? 'opacity-80' : ''}`}
-            
+              className={`p-6 hover:bg-gray-50 transition-colors rounded-lg shadow-blue-50 my-3 ${
+                isMeetingPast(meeting.date) ? 'opacity-80' : ''
+              }`}
             >
               <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-4">
                 <div className="flex-1">
                   <div className="flex items-start gap-3">
-                    <div className={`mt-1 flex-shrink-0 h-3 w-3 rounded-full ${
-                      isMeetingPast(meeting.date) ? 'bg-gray-400' : 'bg-blue-500'
-                    }`}></div>
+                    <div
+                      className={`mt-1 flex-shrink-0 h-3 w-3 rounded-full ${
+                        isMeetingPast(meeting.date) ? 'bg-gray-400' : 'bg-blue-500'
+                      }`}
+                    ></div>
                     <div>
                       <div className="flex items-center gap-2">
                         <h3 className="text-lg font-medium text-gray-900">{meeting.title}</h3>
-                        <span className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
-                          isMeetingPast(meeting.date) 
-                            ? 'bg-gray-100 text-gray-800' 
-                            : 'bg-blue-100 text-blue-800'
-                        }`}>
+                        <span
+                          className={`inline-flex items-center px-2 py-0.5 rounded text-xs font-medium ${
+                            isMeetingPast(meeting.date)
+                              ? 'bg-gray-100 text-gray-800'
+                              : 'bg-blue-100 text-blue-800'
+                          }`}
+                        >
                           {isMeetingPast(meeting.date) ? 'Completed' : 'Upcoming'}
                         </span>
                       </div>
                       <p className="mt-1 text-gray-600">{meeting.description}</p>
-                      
+
                       <div className="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
                         <div className="flex items-start">
                           <Calendar className="flex-shrink-0 h-4 w-4 mt-0.5 mr-2 text-gray-500" />
@@ -169,14 +157,16 @@ const MeetingList = () => {
                           <Clock className="flex-shrink-0 h-4 w-4 mt-0.5 mr-2 text-gray-500" />
                           <div>
                             <div className="text-gray-500">Time</div>
-                            <div className="text-gray-900">{formatTimeRange(meeting.startTime, meeting.endTime)}</div>
+                            <div className="text-gray-900">
+                              {formatTimeRange(meeting.startTime, meeting.endTime)}
+                            </div>
                           </div>
                         </div>
                         <div className="flex items-start">
                           <Users className="flex-shrink-0 h-4 w-4 mt-0.5 mr-2 text-gray-500" />
                           <div>
                             <div className="text-gray-500">Participants</div>
-                            <div className="text-gray-900">{meeting.participants} faculty members</div>
+                            <div className="text-gray-900">{meeting.participants} participants</div>
                           </div>
                         </div>
                         <div className="flex items-start">
@@ -210,6 +200,13 @@ const MeetingList = () => {
                     </button>
                     <button className="px-3 py-1.5 inline-flex items-center border border-red-200 rounded-md text-sm font-medium text-red-600 hover:bg-red-50 transition-colors">
                       Cancel
+                    </button>
+                    <button
+                      onClick={() => handleNotify(meeting.id)}
+                      className="px-3 py-1.5 inline-flex items-center border border-blue-200 rounded-md text-sm font-medium text-blue-600 hover:bg-blue-50 transition-colors"
+                    >
+                      <Mail className="w-4 h-4 mr-2" />
+                      Notify
                     </button>
                   </div>
                 )}

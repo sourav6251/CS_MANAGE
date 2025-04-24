@@ -27,12 +27,12 @@ const departmentSchema = new Schema({
         // required : true,
 
     },
-    email : {
-        type : String,
-        required : [ true, 'email is requiresd !' ],
-        unique : true,
-        trim : true
-    },
+    // email : {
+    //     type : String,
+    //     required : [ true, 'email is requiresd !' ],
+    //     unique : true,
+    //     trim : true
+    // },
     
 
 } , { timestamps : true} )

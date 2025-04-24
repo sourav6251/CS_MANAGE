@@ -15,8 +15,9 @@ import SettingsPages from "./pages/SettingsPages";
 
 import ProtectedRoute from "./components/common/ProtectedRoute";
 import Error from "./components/common/Error";
-import { Register } from "./components/auth/Register";
+// import { Register } from "./components/auth/Register";
 import MemberPages from "./pages/MemberPages";
+import Register from "./components/auth/Register";
 
 function App() {
     const isLogin = useSelector((state) => state.user.isLogin);
@@ -120,12 +121,12 @@ function App() {
                 <Route path="/error" element={<Error />} />
                 <Route path="*" element={<Error />} />
 
-                <Route
+                {/* <Route
                     path="/login"
                     element={isLogin ? <Navigate to="/" replace /> : <Login />}
-                />
+                /> */}
                 <Route
-                    path="/register"
+                    path="/login"
                     element={
                         isLogin ? <Navigate to="/" replace /> : <Register />
                     }

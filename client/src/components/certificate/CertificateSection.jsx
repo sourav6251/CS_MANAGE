@@ -2,9 +2,11 @@ import { useState } from "react";
 import { useSelector } from "react-redux";
 import CertificateForm from "./CertificateForm";
 import CertificateList from "./CertificateList";
+import store from '../../redux/Store';
 
 const CertificateSection = () => {
-    const role = useSelector((state) => state.user.role);
+  // import store from '../../redux/Store';
+  const { role } = store.getState().user;
     const isExternal = role === "external";
     const isHod = role === "hod";
 

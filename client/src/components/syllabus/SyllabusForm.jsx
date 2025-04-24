@@ -1,13 +1,29 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { semesters } from '../../data/mockData';
+import { toast } from 'sonner';
+import ApiFunction from '../services/ApiFunction';
 
-const SyllabusForm = () => {
+const SyllabusForm = ({ edit = false, syllabusData, onClose }) => {
   const [syllabus, setSyllabus] = useState({
+    _id: '',
     semester: '',
     paperCode: '',
     paperTitle: '',
     file: null,
   });
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    if (edit && syllabusData) {
+      setSyllabus({
+        _id: syllabusData._id || '',
+        semester: syllabusData.semester || '',
+        paperCode: syllabusData.paperCode || '',
+        paperTitle: syllabusData.paperName || '',
+        file: syllabusData.media?.[0]?.mediaUrl || null,
+      });
+    }
+  }, [edit, syllabusData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -20,33 +36,55 @@ const SyllabusForm = () => {
     }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setLoading(true);
 
     if (!syllabus.semester || !syllabus.paperCode || !syllabus.paperTitle) {
-      alert('Please fill all required fields');
+      toast.error('Please fill in all required fields');
+      setLoading(false);
       return;
     }
 
-    if (!syllabus.file) {
-      alert('Please upload a syllabus PDF');
-      return;
+    try {
+      if (edit) {
+        // Handle update logic
+        await ApiFunction.updateSyllabus({
+          id: syllabus._id,
+          semester: syllabus.semester,
+          paperCode: syllabus.paperCode,
+          paperName: syllabus.paperTitle,
+          file: syllabus.file,
+        });
+        toast.success('Syllabus updated successfully');
+      } else {
+        // Handle create logic
+        await ApiFunction.uploadSyllabus(syllabus);
+        toast.success('Syllabus uploaded successfully');
+      }
+
+      setSyllabus({
+        _id: '',
+        semester: '',
+        paperCode: '',
+        paperTitle: '',
+        file: null,
+      });
+      onClose(); // Close the form after submission
+    } catch (error) {
+      toast.error(`Failed to ${edit ? 'update' : 'upload'} syllabus`);
+      console.error(error);
+    } finally {
+      setLoading(false);
     }
-
-    alert('Syllabus has been uploaded successfully');
-
-    setSyllabus({
-      semester: '',
-      paperCode: '',
-      paperTitle: '',
-      file: null,
-    });
   };
 
   return (
     <div className="border border-gray-200 rounded-md shadow mb-6 overflow-hidden">
       <div className="p-4 border-b border-gray-200 bg-gray-50">
-        <h2 className="text-lg font-semibold text-primary">Upload New Syllabus</h2>
+        <h2 className="text-lg font-semibold text-primary">
+          {edit ? 'Edit Syllabus' : 'Upload New Syllabus'}
+        </h2>
       </div>
       <div className="p-4">
         <form onSubmit={handleSubmit}>
@@ -122,17 +160,29 @@ const SyllabusForm = () => {
                 Browse Files
               </button>
               {syllabus.file && (
-                <p className="mt-2 text-sm text-gray-600">Selected: {syllabus.file.name}</p>
+                <p className="mt-2 text-sm text-gray-600">
+                  Selected: {typeof syllabus.file === 'string' ? syllabus.file : syllabus.file.name}
+                </p>
               )}
             </div>
           </div>
 
-          <div className="flex justify-end">
+          <div className="flex justify-end gap-4">
+            <button
+              type="button"
+              onClick={onClose}
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+            >
+              Cancel
+            </button>
             <button
               type="submit"
-              className="px-4 py-2 bg-blue-400 hover:bg-blue-700  cursor-pointer text-white rounded-md hover:bg-secondary/90 focus:outline-none focus:ring-2 focus:ring-secondary"
+              disabled={loading}
+              className={`px-4 py-2 bg-blue-400 text-white rounded-md ${
+                loading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-blue-700'
+              }`}
             >
-              <i className="fas fa-upload mr-1"></i> Upload Syllabus
+              {loading ? 'Processing...' : edit ? 'Update Syllabus' : 'Upload Syllabus'}
             </button>
           </div>
         </form>

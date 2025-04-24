@@ -20,7 +20,8 @@ export const RESPONSE_MESSAGES = {
     USER_UPDATED: "User update success",
     USER_DELETE: "User deleted success",
     USER_GET: "User fatch successfully ",
-
+    USER_NOT_FOUND: "User not found ",
+    USERS_FETCHED: "Users fetched successfully",
     //meeting
     MEETING_CREATED: "Meeting created successfully",
     MEETING_UPDATED: "Meeting update success",
@@ -28,6 +29,12 @@ export const RESPONSE_MESSAGES = {
     MEETING_GET: "Meeting fatch successfully ",
     NO_MEETING: "No Meeting are available!",
 
+    //Mail
+    MAIL_SUCCESS:"Mail send successfully check mail",
+    MAIL_ERROR:"Can't send mail  please try again",
 
+    //OTP
+    OTP_SUCCESS:"OTPgenerate successful please checkmail"
+    // OTP_SUCCESS:"OTPgenerate successful please checkmail"
 
 }

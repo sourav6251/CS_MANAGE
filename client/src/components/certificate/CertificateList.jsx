@@ -4,11 +4,12 @@ import toast from 'react-hot-toast';
 import { certificateRequests as initialRequests } from '../../data/mockData';
 import { formatDate } from '../../lib/utils';
 import { Download, Eye } from 'lucide-react';
+import store from '../../redux/Store';
 
 const CertificateList = () => {
-  const role = useSelector((state) => state.user.role); // Fetching role from Redux
-  const isHod = role === 'hod';
-  const isExternal = role === 'external';
+  const { role } = store.getState().user;
+    const isExternal = role === "external";
+    const isHod = role === "hod";
 
   const [requests, setRequests] = useState(initialRequests);
 

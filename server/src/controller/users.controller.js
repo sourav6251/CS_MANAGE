@@ -1,81 +1,40 @@
 import { RESPONSE_MESSAGES } from "../constants/responseMessage.constants.js";
 import { HTTP_STATUS } from "../constants/statusCode.constants.js";
 import { sendMail } from "../services/sendmail.service.js";
-// import userService from "../services/user.service.js";
 import userService from "../services/user.service.js";
 import { sendResponse } from "../utils/response.handler.js";
 
-class UserController {
+class UsersController {
     async createUser(req, res) {
         try {
-            const userData = {
-                name: req.body.name,
-                email: req.body.email,
-                password: req.body.password,
-                profile_pic: {
-                    url: req.body.url,
-                    public_id: req.body.public_id,
-                },
-                role: req.body.role,
-            };
+            const user = await userService.createUser(req.body);
 
-            const user = await userService.RegisterUser(
-                userData,
-                req.body.role,
-                req.body.departmentID,
-                req.body.departmentName,
-                req.body.semester
+            return sendResponse(res, {
+                status: HTTP_STATUS.CREATED,
+                message: RESPONSE_MESSAGES.USER_CREATED,
+                success: true,
+                data: user,
+            });
+        } catch (error) {
+            return sendResponse(res, {
+                status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                message: RESPONSE_MESSAGES.INTERNAL_ERROR,
+                success: false,
+                error: error,
+            });
+        }
+    }
+
+    async updateUser(req, res) {
+        try {
+            const user = await userService.updateUser(
+                req.body,
+                req.params.userId
             );
-            return sendResponse(res, {
-                status: HTTP_STATUS.CREATED,
-                message: RESPONSE_MESSAGES.USER_CREATED,
-                success: true,
-                data: user,
-            });
-        } catch (error) {
-            return sendResponse(res, {
-                status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-                message: RESPONSE_MESSAGES.INTERNAL_ERROR,
-                success: false,
-                error: error,
-            });
-        }
-    }
 
-    async showAllUser(req, res) {
-        try {
-            const user = await userService.showuser();
-            return sendResponse(res, {
-                status: HTTP_STATUS.CREATED,
-                message: RESPONSE_MESSAGES.USER_CREATED,
-                success: true,
-                data: user,
-            });
-        } catch (error) {
-            return sendResponse(res, {
-                status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-                message: RESPONSE_MESSAGES.INTERNAL_ERROR,
-                success: false,
-                error: error,
-            });
-        }
-    }
-
-    async loginUser(req, res) {
-        try {
-            const user = await userService.login(req.body);
-    
-            if (user === "notExist") {
-                return sendResponse(res, {
-                    status: 404,
-                    message: "User doesn't exist",
-                    success: false,
-                    error: "Invalid email or password",
-                });
-            }
             return sendResponse(res, {
                 status: HTTP_STATUS.OK,
-                message: RESPONSE_MESSAGES.USER_LOGGED_IN || "User logged in successfully",
+                message: RESPONSE_MESSAGES.USER_UPDATED,
                 success: true,
                 data: user,
             });
@@ -84,28 +43,62 @@ class UserController {
                 status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
                 message: RESPONSE_MESSAGES.INTERNAL_ERROR,
                 success: false,
-                error: error.message || "Something went wrong",
+                error: error,
             });
         }
     }
-    
+
+    async deleteUser(req, res) {
+        try {
+            const user = await userService.deleteUser(req.params.userId);
+
+            return sendResponse(res, {
+                status: HTTP_STATUS.OK,
+                message: RESPONSE_MESSAGES.USER_DELETE,
+                success: true,
+                data: user,
+            });
+        } catch (error) {
+            return sendResponse(res, {
+                status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                message: RESPONSE_MESSAGES.INTERNAL_ERROR,
+                success: false,
+                error: error,
+            });
+        }
+    }
+ 
+    async getUser(req, res) {
+        try {
+            const user = await userService.getUserById(req.body);
+            return sendResponse(res, {
+                status: HTTP_STATUS.OK,
+                message: RESPONSE_MESSAGES.USER_GET,
+                success: true,
+                data: user,
+            });
+        } catch (error) {
+            return sendResponse(res, {
+                status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+                message: RESPONSE_MESSAGES.INTERNAL_ERROR,
+                success: false,
+                error: error,
+            });
+        }
+    }
 
     async generateOTP(req, res) {
         try {
             const { userId } = req.params;
 
             const result = await userService.generateOTP(userId);
-            console.log(`Controller result`,result);
-           let html=`<h1>${result.otp}</h1>`
-            
             try {
-                const status=await sendMail({to:result.email, subject:"Verify OTP",html: html});
-                
+                await sendMail(result.email, "Verify OTP", result.otp);
                 return sendResponse(res, {
                     status: HTTP_STATUS.OK,
                     message: RESPONSE_MESSAGES.OTP_SUCCESS,
                     success: true,
-                    data:status
+                    // includes { otp } – you can remove this in production for security
                 });
             } catch (error) {
                 return sendResponse(res, {
@@ -129,7 +122,7 @@ class UserController {
         try {
             const { userId, otp } = req.body;
 
-            const result = await userService.verifyOTP({  userId:userId, otp:otp  });
+            const result = await userService.verifyOTP({ userId, otp });
 
             return sendResponse(res, {
                 status: HTTP_STATUS.OK,
@@ -164,30 +157,46 @@ class UserController {
             });
         }
     }
-    async getUsers(req, res) {
-        try {
-          const { role, department } = req.query;
-          const filter = {};
-          if (role) filter.role = role;
-          if (department) filter.department = department;
-    
-          const users = await UserService.getUsers(filter);
-          return sendResponse(res, {
-            status: HTTP_STATUS.OK,
-            message: RESPONSE_MESSAGES.USERS_FETCHED,
-            success: true,
-            data: users,
-          });
-        } catch (error) {
-          return sendResponse(res, {
-            status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
-            message: RESPONSE_MESSAGES.INTERNAL_ERROR,
-            success: false,
-            error,
-          });
-        }
-      }
+
+    // async getUserByDepartment(req, res) {
+    //     try {
+    //         const user = await userService.getUserByDepartment(req.params.department);
+    //         return sendResponse(res, {
+    //             status: HTTP_STATUS.OK,
+    //             message: RESPONSE_MESSAGES.USER_BY_DEPARTMENT,
+    //             success: true,
+    //             data: user,
+    //         });
+    //     } catch (error) {
+    //         return sendResponse(res, {
+    //             status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    //             message: RESPONSE_MESSAGES.INTERNAL_ERROR,
+    //             success: false,
+    //             error: error,
+    //         });
+    //     }
+    // }
+
+    // async getUserByDepartmentRole(req, res) {
+    //     const { department, role } = req.query;
+    //     try {
+    //         // const user = await userService.getUserByDepartmentRole(req.body);
+    //         const user = await userService.getUserByDepartmentRole({ department, role });
+    //         return sendResponse(res, {
+    //             status: HTTP_STATUS.OK,
+    //             message: RESPONSE_MESSAGES.USER_BY_DEPARTMENT_ROLE,
+    //             success: true,
+    //             data: user,
+    //         });
+    //     } catch (error) {
+    //         return sendResponse(res, {
+    //             status: HTTP_STATUS.INTERNAL_SERVER_ERROR,
+    //             message: RESPONSE_MESSAGES.INTERNAL_ERROR,
+    //             success: false,
+    //             error: error,
+    //         });
+    //     }
+    // }
 }
 
-export default new UserController();
- 
+export default new UsersController();

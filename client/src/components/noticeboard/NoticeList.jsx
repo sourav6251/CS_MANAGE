@@ -1,90 +1,102 @@
-import { useSelector } from 'react-redux';
-import { useState } from 'react';
-import NoticeCard from './NoticeCard';
-import { notices as initialNotices, noticeCategories } from '../../data/mockData';
+import { useEffect, useState } from "react";
+import NoticeCard from "./NoticeCard";
+import ApiFunction from "../services/ApiFunction";
+import { toast } from "sonner";
+import store from "../../redux/Store";
 
-const NoticeList = () => {
-  const role = useSelector((state) => state.user.role);
-  const isHod = role === 'hod';
+const NoticeList = ({ onEditNotice }) => {
+  const { role } = store.getState().user;
+  const isHod = role === "hod";
+  const [notices, setNotices] = useState([]); // Always initialize as array
+  const [searchTerm, setSearchTerm] = useState("");
+  const [loading, setLoading] = useState(true); // Add loading state
+  const [error, setError] = useState(null); // Add error state
 
-  const [notices, setNotices] = useState(initialNotices);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [categoryFilter, setCategoryFilter] = useState('All Notices');
+  const filteredNotices = notices.filter((notice) =>
+    notice.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    notice.description.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-  const filteredNotices = notices
-    .filter(notice => categoryFilter === 'All Notices' || notice.category === categoryFilter)
-    .filter(notice =>
-      notice.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      notice.description.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-
-  const handleDeleteNotice = (id) => {
-    setNotices(notices.filter(notice => notice.id !== id));
-    alert('Notice deleted successfully.');
+  const handleDeleteNotice = async (id) => {
+    try {
+      await ApiFunction.deleteNotice(id);
+      setNotices((prev) => prev.filter((notice) => notice._id !== id));
+      toast.success("Notice deleted successfully");
+    } catch (error) {
+      toast.error("Failed to delete notice");
+      console.error("Delete notice error:", error);
+    }
   };
+
+  useEffect(() => {
+    const fetchNotices = async () => {
+      setLoading(true);
+      setError(null);
+      try {
+        const data = await ApiFunction.showNotice();
+        // Ensure data is an array; fallback to empty array if not
+        setNotices(Array.isArray(data) ? data : []);
+      } catch (error) {
+        setError("Failed to load notices");
+        toast.error("Failed to load notices");
+        setNotices([]); // Reset to empty array on error
+        console.error("Fetch notices error:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchNotices();
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="border-0 rounded-md overflow-hidden shadow p-4 text-center">
+        <div className="animate-spin rounded-full h-8 w-8 border-t-2 border-b-2 border-primary mx-auto"></div>
+        <p className="mt-2 text-gray-600">Loading notices...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="border-0 rounded-md overflow-hidden shadow p-4 text-center">
+        <p className="text-red-600">{error}</p>
+      </div>
+    );
+  }
 
   return (
     <div className="border-0 rounded-md overflow-hidden shadow">
       <div className="p-4 border-b flex justify-between items-center flex-wrap gap-2 bg-gray-50">
         <h2 className="text-lg font-semibold text-primary">Published Notices</h2>
-        <div className="flex flex-wrap gap-2">
-          <div className="relative">
-            <input
-              type="text"
-              className="pl-8 pr-3 py-1 border-0 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-              placeholder="Search notices..."
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-            />
-            <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
-          </div>
-          <select
-            className="px-3 py-1 border-0 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
-            value={categoryFilter}
-            onChange={(e) => setCategoryFilter(e.target.value)}
-          >
-            {noticeCategories.map(category => (
-              <option key={category} value={category}>{category}</option>
-            ))}
-          </select>
+        <div className="relative">
+          <input
+            type="text"
+            className="pl-8 pr-3 py-1 border-0 border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-secondary"
+            placeholder="Search notices..."
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+          <i className="fas fa-search absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"></i>
         </div>
       </div>
 
       <div className="p-4">
-      {filteredNotices.length > 0 ? (
-  <div
-    className={`space-y-4 ${
-      filteredNotices.length > 1 ? 'overflow-y-auto  pr-2' : ''
-    }`}
-  >
-    {filteredNotices.map(notice => (
-      <NoticeCard
-        key={notice.id}
-        notice={notice}
-        isHod={isHod}
-        onDelete={handleDeleteNotice}
-      />
-    ))}
-  </div>
-) : (
-  <p className="text-center py-8 text-gray-500">No notices found matching your criteria</p>
-)}
-
-        {/* {filteredNotices.length > 0 && (
-          <div className="flex justify-center mt-6">
-            <nav className="flex items-center">
-              <button className="px-2 py-1 border-0 border-gray-300 rounded-l-md text-gray-600 hover:bg-gray-50">
-                <i className="fas fa-chevron-left"></i>
-              </button>
-              <button className="px-3 py-1 border-t border-b border-gray-300 bg-secondary text-white">1</button>
-              <button className="px-3 py-1 border-t border-b border-gray-300 text-gray-600 hover:bg-gray-50">2</button>
-              <button className="px-3 py-1 border-t border-b border-gray-300 text-gray-600 hover:bg-gray-50">3</button>
-              <button className="px-2 py-1 border-0 border-gray-300 rounded-r-md text-gray-600 hover:bg-gray-50">
-                <i className="fas fa-chevron-right"></i>
-              </button>
-            </nav>
+        {filteredNotices.length > 0 ? (
+          <div className="space-y-4">
+            {filteredNotices.map((notice) => (
+              <NoticeCard
+                key={notice._id}
+                notice={notice}
+                isHod={isHod}
+                onDelete={handleDeleteNotice}
+                onEdit={onEditNotice}
+              />
+            ))}
           </div>
-        )} */}
+        ) : (
+          <p className="text-center py-8 text-gray-500">No notices found</p>
+        )}
       </div>
     </div>
   );

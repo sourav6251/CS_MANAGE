@@ -40,9 +40,9 @@ const Header = () => {
           <h1 className="text-xl font-bold hidden md:block">College Department Management</h1>
           <h1 className="text-xl font-bold md:hidden">CDM System</h1>
         </div>
-
+  
         {/* Role Dropdown */}
-        <div className="relative group">
+        {/* <div className="relative group">
           <button className="bg-white bg-opacity-20 px-3 py-1 rounded flex items-center gap-2 cursor-pointer">
             {getRoleDisplay()}
             <span>▼</span>
@@ -73,7 +73,7 @@ const Header = () => {
               External View
             </div>
           </div>
-        </div>
+        </div> */}
 
         {/* Right Section */}
         <div className="flex items-center gap-4">

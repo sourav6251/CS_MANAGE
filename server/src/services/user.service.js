@@ -1,37 +1,202 @@
+import { Departments } from "../model/department.model.js";
+import { Externals } from "../model/external.model.js";
+import { Facultys } from "../model/faculty.model.js";
+import { Hods } from "../model/hod.model.js";
+import { Students } from "../model/student.model.js";
 import { Users } from "../model/user.model.js";
+// import departmentService from "./department.service.js";
 
 class UserService {
-    
-    //create user
+    async RegisterUser(data, role, departmentID, depertmentName,semester) {
+        switch (role) {
+            case "hod":
+                return this.newHOD(data, depertmentName);
+            case "faculty":
+                const faculty = await this.createUser(data);
+                return this.newFaculty(faculty._id, departmentID);
+            case "external":
+                const external = await this.createUser(data);
+                return this.newExternal(external._id, departmentID);
+            default:
+                const student = await this.createUser(data);
+                return this.newStudent(student._id, departmentID,semester);
+        }
+    }
+
+    async showuser() {
+        return Users.find({});
+    }
+
     async createUser(data) {
-        const user = await Users.create(data);
-        return user;
+        return await Users.create(data);
     }
-    //update user
-    async updateUser(data, id) {
-        const user = await Users.findByIdAndUpdate(id, data, { new: true });
-        return user;
-    }
-    //delete user
-    async deleteUser( id) {
-        const user = await Users.findByIdAndDelete(id);
-        return user;
+ 
+    async newHOD(data, depertmentName) {
+        // const departmentID = await departmentService.createDepartment({
+        //     name: depertmentName,
+        // });
+        const departmentID = await Departments.create({ name: depertmentName });
+        const users = await this.createUser(data);
+        const hodData = {
+            user: users._id,
+            department: departmentID._id,
+        };
+        return await Hods.create(hodData);
     }
 
-    async getUser(data) {
+    async newFaculty(userID, departmentID) {
+        const facultyData = {
+            user: userID,
+            department: departmentID,
+        };
+        return await Facultys.create(facultyData);
+    }
+
+    async newExternal(userID, departmentID) {
+        const externalData = {
+            user: userID,
+            department: departmentID,
+        };
+        return await Externals.create(externalData);
+    }
+    async newStudent(userID, departmentID,semester) {
+        const studentData = {
+            user: userID,
+            department: departmentID,
+            semester:semester
+        };
+        return await Students.create(studentData);
+    }
+
+    // async login(data) {
+    //     const { email, password } = data;
+    
+    //     // 1. Find the user and include password (since it's excluded by default)
+    //     const user = await Users.findOne({ email }).select('+password');
+    
+    //     if (!user) {
+    //         return "notExist";
+    //     }
+    
+    //     // 2. Use the comparePassword method from your schema
+    //     const isMatch = await user.comparePassword(password);
+    
+    //     if (!isMatch ) {
+    //         return "notExist";
+    //     }
+    
+    //     // 3. Return user (optional: remove password manually or regenerate without password)
+    //     user.password = undefined; // Don't leak hashed password
+    //     return user;
+    // }
+    async login(data) {
+        const { email, password } = data;
+    
+        // 1. Find the user with password
+        const user = await Users.findOne({ email }).select('+password');
         
-        const department = data.department;
-        const semester = data.semester;
-        const role = data.role;
-        const filter = { department };
-        if (semester) filter.semester = semester;
-        if (paperCode) filter.paperCode = paperCode;
-        if (role) filter.role = role;
-         const user = await Users.find(filter);
-               
-        return user;
+        if (!user) {
+            return "notExist";
+        }
+    
+        // 2. Verify password
+        const isMatch = await user.comparePassword(password);
+        if (!isMatch) {
+            return "notExist";
+        }
+    
+        // 3. Get department based on role
+        let departmentInfo = null;
+        
+        switch(user.role) {
+            case 'hod':
+                const hod = await Hods.findOne({ user: user._id }).populate('department');
+                departmentInfo = hod?.department;
+                break;
+                
+            case 'faculty':
+                const faculty = await Facultys.findOne({ user: user._id }).populate('department');
+                departmentInfo = faculty?.department;
+                break;
+                
+            case 'student':
+                const student = await Students.findOne({ user: user._id }).populate('department');
+                departmentInfo = student?.department;
+                break;
+                
+            case 'external':
+                const external = await Externals.findOne({ user: user._id }).populate('department');
+                departmentInfo = external?.department;
+                break;
+        }
+    
+        // 4. Return user with department info
+        const userObj = user.toObject();
+        delete userObj.password;
+        
+        return {
+            ...userObj,
+            department: departmentInfo
+        };
+    }
+    
+    async generateOTP(userId) {
+        
+        const otp = Math.floor(100000 + Math.random() * 900000); // 6-digit
+        const expiry = new Date(Date.now() + 5 * 60 * 1000); // 5 min from now
+
+        const user = await Users.findByIdAndUpdate(
+            userId,
+            { otp, otpExpiary: expiry },
+            { new: true }
+        );
+
+        console.log(`userId service`,user);
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+        return { email: user.email, otp };
     }
 
-}
+    async verifyOTP({ userId, otp }) {
 
+        console.log(`userId service=>`,userId);
+        
+        const user = await Users.findById(userId);
+
+        if (!user) {
+            throw new Error("User not found");
+        }
+
+        if (!user.otp || !user.otpExpiary) {
+            throw new Error("No OTP has been set");
+        }
+
+        const isExpired = user.otpExpiary < new Date();
+        const isMatch = user.otp === parseInt(otp);
+
+        if (isExpired) {
+            throw new Error("OTP has expired");
+        }
+
+        if (!isMatch) {
+            throw new Error("Invalid OTP");
+        }
+
+        // ✅ OTP is valid → mark as verified
+        user.otp = undefined;
+        user.otpExpiary = undefined;
+        user.verifyByOTP = true;
+
+        await user.save();
+
+        return { success: true, message: "OTP verified successfully" };
+    }
+    async getUsers(filter) {
+        return await Users.find(filter)
+          .populate("department", "name")
+          .select("name email role department");
+      }
+}
 export default new UserService();

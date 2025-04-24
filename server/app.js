@@ -8,6 +8,7 @@ import { meetingRouter } from "./src/routes/meeting.routes.js"
 import { certificateRouter } from "./src/routes/certificate.routes.js"
 import { noticeboardRouter } from "./src/routes/notice.routes.js"
 import { routineRouter } from "./src/routes/routine.routes.js"
+import { departmentRouter } from "./src/routes/department.routes.js"
 
 
 
@@ -24,6 +25,7 @@ server.use('/api/v1/meeting', meetingRouter)
 server.use('/api/v1/certificate', certificateRouter)
 server.use('/api/v1/noticeboard', noticeboardRouter)
 server.use('/api/v1/routine', routineRouter);
+server.use('/api/v1/department', departmentRouter);
 
 
 server.get("/", (req, res) => {

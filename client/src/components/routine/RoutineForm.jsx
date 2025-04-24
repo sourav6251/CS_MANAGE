@@ -1,20 +1,36 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { semesters } from '../../data/mockData';
+import { toast } from 'sonner';
+import ApiFunction from '../services/ApiFunction';
 
-const RoutineForm = () => {
+const RoutineForm = ({ edit = false, routineData, onClose }) => {
   const [routine, setRoutine] = useState({
+    _id: '',
     semester: '',
     paperCode: '',
     paperTitle: '',
     startTime: '',
     endTime: '',
     room: '',
-    days: []
+    days: [],
   });
 
-  const [message, setMessage] = useState({ type: '', text: '' });
-
   const days = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'];
+
+  useEffect(() => {
+    if (edit && routineData) {
+      setRoutine({
+        _id: routineData._id || '',
+        semester: routineData.semester || '',
+        paperCode: routineData.schedules?.[0]?.timeSlots?.[0]?.paperCode || '',
+        paperTitle: routineData.paperTitle || '',
+        startTime: routineData.schedules?.[0]?.timeSlots?.[0]?.startTime || '',
+        endTime: routineData.schedules?.[0]?.timeSlots?.[0]?.endTime || '',
+        room: routineData.roomNo || '',
+        days: routineData.schedules?.map((s) => s.dayName) || [],
+      });
+    }
+  }, [edit, routineData]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -30,45 +46,55 @@ const RoutineForm = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
 
-    if (!routine.semester || !routine.paperCode || !routine.startTime || !routine.endTime || !routine.room || routine.days.length === 0) {
-      setMessage({ type: 'error', text: 'Please fill all required fields' });
+    if (
+      !routine.semester ||
+      !routine.paperCode ||
+      !routine.startTime ||
+      !routine.endTime ||
+      !routine.room ||
+      routine.days.length === 0
+    ) {
+      toast.error('Please fill all required fields');
       return;
     }
 
     if (routine.startTime >= routine.endTime) {
-      setMessage({ type: 'error', text: 'Start time must be before end time' });
+      toast.error('Start time must be before end time');
       return;
     }
 
-    setMessage({ type: 'success', text: 'Routine has been added successfully' });
-
-    setRoutine({
-      semester: '',
-      paperCode: '',
-      paperTitle: '',
-      startTime: '',
-      endTime: '',
-      room: '',
-      days: []
-    });
+    try {
+      if (edit) {
+        await ApiFunction.updateRoutine(routine._id, routine);
+        toast.success('Routine updated successfully');
+      } else {
+        await ApiFunction.createRoutine(routine);
+        toast.success('Routine created successfully');
+      }
+      setRoutine({
+        _id: '',
+        semester: '',
+        paperCode: '',
+        paperTitle: '',
+        startTime: '',
+        endTime: '',
+        room: '',
+        days: [],
+      });
+      onClose();
+    } catch (error) {
+      toast.error(`Failed to ${edit ? 'update' : 'create'} routine`);
+    }
   };
 
   return (
     <div className="border border-gray-300 rounded-md shadow p-6 mb-6">
-      <h2 className="text-lg font-semibold text-primary mb-4">Add New Class Schedule</h2>
-
-      {message.text && (
-        <div
-          className={`mb-4 px-4 py-2 rounded text-sm ${
-            message.type === 'error' ? 'bg-red-100 text-red-700' : 'bg-green-100 text-green-700'
-          }`}
-        >
-          {message.text}
-        </div>
-      )}
+      <h2 className="text-lg font-semibold text-primary mb-4">
+        {edit ? 'Edit Class Schedule' : 'Add New Class Schedule'}
+      </h2>
 
       <form onSubmit={handleSubmit}>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
@@ -167,12 +193,19 @@ const RoutineForm = () => {
           </div>
         </div>
 
-        <div className="flex justify-end">
+        <div className="flex justify-end gap-4">
+          <button
+            type="button"
+            onClick={onClose}
+            className="px-4 py-2 bg-gray-300 text-gray-800 rounded-md hover:bg-gray-400"
+          >
+            Cancel
+          </button>
           <button
             type="submit"
             className="px-4 py-2 bg-secondary text-white rounded-md hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
-            <i className="fas fa-plus mr-1"></i> Add to Routine
+            <i className="fas fa-plus mr-1"></i> {edit ? 'Update Routine' : 'Add to Routine'}
           </button>
         </div>
       </form>

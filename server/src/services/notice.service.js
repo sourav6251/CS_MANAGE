@@ -14,7 +14,7 @@ class NoticeboardService {
         if (department) filter.department = department;
 
         const notices = await Noticeboard.find(filter)
-            .populate("user", "name email")
+            // .populate("user", "name email")
             .populate("department", "name")
             .select("title description media createdAt");
 

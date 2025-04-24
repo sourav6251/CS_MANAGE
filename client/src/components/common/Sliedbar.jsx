@@ -15,9 +15,11 @@ import {
     UserCog,
 } from "lucide-react";
 import { logoutUser } from "../../redux/UserState";
-
+// import { clearUser } from "../../redux/userSlice";
+import { clearUser } from "../../redux/userSlice";
 const Sidebar = () => {
     const [isCollapsed, setIsCollapsed] = useState(false);
+    // const dispatch = useDispatch();
     const dispatch = useDispatch();
     const location = useLocation();
     const role = useSelector((state) => state.user.role);
@@ -200,7 +202,11 @@ const Sidebar = () => {
             {/* Logout Section */}
             <div className="border-t border-gray-100 px-4 py-5">
                 <button
-                    onClick={() => dispatch(logoutUser())}
+                    onClick={
+                        // () => dispatch(logoutUser());
+                        ()=>dispatch(clearUser())
+
+                    }
                     className={`w-full flex items-center ${
                         isCollapsed ? "justify-center" : "justify-center px-4"
                     } py-2.5 text-red-600 rounded-lg hover:bg-red-50/80 transition-all`}

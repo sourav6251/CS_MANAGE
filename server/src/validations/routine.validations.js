@@ -6,7 +6,7 @@ class RoutineValidation {
         body: z.object({
             user: z.string({ required_error: "User ID is required" }),
             department: z.string({ required_error: "Department ID is required" }),
-            semester: z.string({ required_error: "Semester ID is required" }),
+            semester: z.number({ required_error: "Semester ID is required" }),
             roomNo: z.string().optional(),
             schedules: z
                 .array(

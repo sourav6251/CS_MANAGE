@@ -1,6 +1,6 @@
 import { z } from "zod";
 
-class UserValidation {
+class UsersValidation {
     create = z.object({
         body: z.object({
             name: z
@@ -21,7 +21,7 @@ class UserValidation {
             role: z
                 .enum(["hod", "student", "faculty", "external", "superadmin"])
                 .optional(),
-
+ 
             profile_pic: z
                 .object({
                     url: z.string().url().optional(),
@@ -90,6 +90,28 @@ class UserValidation {
         }),
     });
 
+    generateOTP = z.object({
+        params: z.object({
+            userId: z
+                .string({ required_error: "User ID is required" })
+                .min(1, "User ID cannot be empty"),
+        }),
+    });
+    
+    verifyOTP = z.object({
+        body: z.object({
+            userId: z
+                .string({ required_error: "User ID is required" })
+                .min(1, "User ID cannot be empty"),
+    
+            otp: z
+                .number({ required_error: "OTP is required" })
+                .min(100000, "OTP must be a 6-digit number")
+                .max(999999, "OTP must be a 6-digit number"),
+        }),
+    });
+    
+
 }
 
-export default new UserValidation();
+export default new UsersValidation();

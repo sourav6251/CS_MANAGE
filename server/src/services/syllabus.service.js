@@ -19,7 +19,8 @@ class SyllabusService {
         if (semester) filter.semester = semester;
         if (paperCode) filter.paperCode = paperCode;
 
-        const syllabus = await Syllabus.find(filter).select("media");
+        const syllabus = await Syllabus.find(filter)
+                        // .select("media department semester paperCode paperName ");
         console.log(`syllabus skd=>${syllabus}`);
         
 
